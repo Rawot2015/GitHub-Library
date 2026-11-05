@@ -192,10 +192,10 @@ export default function Home() {
       </div>
     </section>
     <section className="library-stats">
-      <div><span>PROJECTS</span><strong>{repos.length}</strong><small>in your library</small></div>
-      <div><span>COLLECTIVE STARS</span><strong>{repos.reduce((sum, repo) => sum + (repo.stars || 0), 0).toLocaleString()}</strong><small>from GitHub</small></div>
-      <div><span>CATEGORIES</span><strong>{new Set(repos.map(repo => repo.category)).size}</strong><small>represented</small></div>
-      <div><span>GITHUB SOURCE</span><strong className="source-status">● Connected metadata</strong><small>fetched automatically from public repositories</small></div>
+      <div className="stat-card"><span className="stat-icon"><Code2 size={17}/></span><div><span>PROJECTS</span><strong>{repos.length}</strong><small>repositories collected</small></div></div>
+      <div className="stat-card"><span className="stat-icon star-icon">★</span><div><span>COLLECTIVE STARS</span><strong>{repos.reduce((sum, repo) => sum + (repo.stars || 0), 0).toLocaleString()}</strong><small>across your collection</small></div></div>
+      <div className="stat-card"><span className="stat-icon"><Search size={17}/></span><div><span>CATEGORIES</span><strong>{new Set(repos.map(repo => repo.category)).size}</strong><small>areas represented</small></div></div>
+      <div className="stat-card"><span className="stat-icon"><span className="status-dot"/></span><div><span>DATA SOURCE</span><strong className="source-status">GitHub API</strong><small>metadata fetched automatically</small></div></div>
     </section>
     <section className="library-table-wrap">
       {error && <p className="error inline-error">{error}</p>}
