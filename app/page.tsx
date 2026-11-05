@@ -30,9 +30,9 @@ function db() {
 
 type RepoStatus = "Active" | "Archived" | "Planned";
 
-type RepoForm = { project_name: string; description: string; category: string; github_url: string; technology: string; tags: string; status: RepoStatus; stars: string };
-const emptyForm: RepoForm = { project_name: "", description: "", category: "Other", github_url: "", technology: "", tags: "", status: "Active", stars: "0" };
-const categories = ["AI & Machine Learning", "Automation", "Engineering", "Knowledge Management", "Web Development", "Productivity", "Data & Analytics", "Other"];
+type RepoForm = { github_url: string };
+const emptyForm: RepoForm = { github_url: "" };
+type GitHubRepository = { name: string; full_name: string; html_url: string; description: string | null; language: string | null; stargazers_count: number; topics?: string[]; archived: boolean };
 
 export default function Home() {
   const [session, setSession] = useState<any>(null);
@@ -80,16 +80,71 @@ export default function Home() {
   async function signOut() { await db().auth.signOut(); setRepos([]); }
 
   async function saveRepo(event: FormEvent) {
-    event.preventDefault(); setSaving(true); setError("");
-    const payload = {
-      project_name: form.project_name.trim(), description: form.description.trim(), category: form.category,
-      github_url: form.github_url.trim(), technology: form.technology.trim() || null,
-      tags: form.tags.split(",").map(x => x.trim()).filter(Boolean), status: form.status,
-      stars: Math.max(0, Number(form.stars) || 0), owner: session.user.id
-    };
-    const { error: e } = await db().from("repositories").insert(payload);
-    if (e) setError(e.message); else { setModal(false); setForm(emptyForm); await loadRepos(); }
-    setSaving(false);
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+
+    try {
+      const parsedUrl = new URL(form.github_url.trim());
+      const parts = parsedUrl.pathname.split("/").filter(Boolean);
+      if (parsedUrl.hostname.toLowerCase() !== "github.com" || parts.length < 2) {
+        throw new Error("Enter a repository URL in this format: https://github.com/owner/repository");
+      }
+
+      const [ownerName, repositoryName] = parts;
+      const apiUrl = `https://api.github.com/repos/${encodeURIComponent(ownerName)}/${encodeURIComponent(repositoryName.replace(/\.git$/i, ""))}`;
+      const response = await fetch(apiUrl, {
+        headers: { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" }
+      });
+
+      if (response.status === 404) {
+        throw new Error("Repository not found. Check the link and make sure the repository is public.");
+      }
+      if (response.status === 403 || response.status === 429) {
+        throw new Error("GitHub API rate limit reached. Please wait a little and try again.");
+      }
+      if (!response.ok) throw new Error(`GitHub could not retrieve this repository (HTTP ${response.status}).`);
+
+      const repository = await response.json() as GitHubRepository;
+      const topics = repository.topics ?? [];
+      const topicText = topics.join(" ").toLowerCase();
+      const category = /machine-learning|artificial-intelligence|llm|deep-learning|ai/.test(topicText)
+        ? "AI & Machine Learning"
+        : /automation|workflow|bot|rpa/.test(topicText)
+          ? "Automation"
+          : /data|analytics|visualization|database/.test(topicText)
+            ? "Data & Analytics"
+            : /engineering|mining|process|simulation/.test(topicText)
+              ? "Engineering"
+              : /knowledge-management|documentation|wiki/.test(topicText)
+                ? "Knowledge Management"
+                : /productivity|tools|developer-tools/.test(topicText)
+                  ? "Productivity"
+                  : "Web Development";
+
+      const payload = {
+        project_name: repository.full_name || repository.name,
+        description: repository.description ?? "",
+        category,
+        github_url: repository.html_url,
+        technology: repository.language,
+        tags: topics,
+        status: repository.archived ? "Archived" : "Active",
+        stars: repository.stargazers_count ?? 0,
+        owner: session.user.id
+      };
+
+      const { error: insertError } = await db().from("repositories").insert(payload);
+      if (insertError) throw insertError;
+
+      setModal(false);
+      setForm(emptyForm);
+      await loadRepos();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not add this repository.");
+    } finally {
+      setSaving(false);
+    }
   }
   async function removeRepo(id: string) {
     if (!confirm("Delete this repository record?")) return;
@@ -118,7 +173,7 @@ export default function Home() {
 
   return <main className="app-shell">
     <header className="topbar"><a className="brand" href="#"><span className="brand-icon"><Code2 size={21}/></span><span>REPO<span>SHELF</span></span></a><div className="user-area"><span>{session.user.email}</span><button className="icon-btn" onClick={signOut} title="Sign out"><LogOut size={17}/></button></div></header>
-    <section className="heading"><div><p className="eyebrow">YOUR PRIVATE WORKSPACE</p><h1>My repositories</h1><p className="subheading">A focused home for projects worth keeping.</p></div><button className="primary add-main" onClick={()=>{setForm(emptyForm);setModal(true)}}><Plus size={20}/> Add Repo</button></section>
+    <section className="heading"><div><p className="eyebrow">YOUR PRIVATE WORKSPACE</p><h1>My repositories</h1><p className="subheading">A focused home for projects worth keeping.</p></div><button className="primary add-main" onClick={()=>{setForm(emptyForm);setModal(true)}}><Plus size={20}/> Add Repo to library</button></section>
     <section className="list-panel">
       <div className="list-toolbar"><div><strong>Project list</strong><span className="count">{repos.length}</span></div><label className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search projects"/></label></div>
       {error && <p className="error inline-error">{error}</p>}
@@ -130,15 +185,11 @@ export default function Home() {
     </section>
     <footer>REPOSHELF <span>·</span> PRIVATE BY DEFAULT</footer>
     {modal && <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setModal(false)}}><section className="modal">
-      <div className="modal-head"><div><p className="eyebrow">NEW ENTRY</p><h2>Add repository</h2></div><button className="icon-btn" onClick={()=>setModal(false)}><X size={19}/></button></div>
+      <div className="modal-head"><div><p className="eyebrow">NEW ENTRY</p><h2>Add Repo to library</h2></div><button className="icon-btn" onClick={()=>setModal(false)}><X size={19}/></button></div>
       <form onSubmit={saveRepo} className="repo-form">
-        <label>Project name<input required maxLength={255} value={form.project_name} onChange={e=>setForm({...form,project_name:e.target.value})} placeholder="e.g. Process Flow Simulator"/></label>
-        <label>Description<textarea required rows={3} value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder="What does this project do?"/></label>
-        <div className="form-grid"><label>Category<select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>{categories.map(c=><option key={c}>{c}</option>)}</select></label><label>Status<select value={form.status} onChange={e=>setForm({...form,status:e.target.value as RepoStatus})}><option>Active</option><option>Planned</option><option>Archived</option></select></label></div>
-        <label>GitHub URL<input required type="url" pattern="https://github\.com/.*" value={form.github_url} onChange={e=>setForm({...form,github_url:e.target.value})} placeholder="https://github.com/owner/repository"/></label>
-        <div className="form-grid"><label>Technology<input value={form.technology} onChange={e=>setForm({...form,technology:e.target.value})} placeholder="React, Python…"/></label><label>Stars<input type="number" min="0" value={form.stars} onChange={e=>setForm({...form,stars:e.target.value})}/></label></div>
-        <label>Tags <span className="muted">(comma separated)</span><input value={form.tags} onChange={e=>setForm({...form,tags:e.target.value})} placeholder="AI, automation, tools"/></label>
-        <div className="modal-actions"><button type="button" className="secondary" onClick={()=>setModal(false)}>Cancel</button><button className="primary" disabled={saving}>{saving ? "Saving…" : "Save repository"}</button></div>
+        <p className="login-copy">Paste a public GitHub repository link. RepoShelf will retrieve its name, description, language, topics, star count and archived status automatically.</p>
+        <label>GitHub repository URL<input required type="url" value={form.github_url} onChange={e=>setForm({github_url:e.target.value})} placeholder="https://github.com/owner/repository"/></label>
+        <div className="modal-actions"><button type="button" className="secondary" onClick={()=>setModal(false)}>Cancel</button><button className="primary" disabled={saving}>{saving ? "Fetching and adding…" : "Add to library"}</button></div>
       </form>
     </section></div>}
   </main>;
