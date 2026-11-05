@@ -192,13 +192,15 @@ export default function Home() {
       {loading ? <div className="empty">Loading your repositories…</div> : filtered.length === 0 ? <div className="empty"><Code2 size={30}/><strong>{repos.length ? "No matching repositories" : "Your library is empty"}</strong><span>{repos.length ? "Try another search term." : "Add a GitHub URL to automatically import its details."}</span></div> :
       <div className="library-table-scroll">
         <table className="library-table">
-          <thead><tr><th>REPOSITORY</th><th>LANGUAGE</th><th>STARS</th><th>UPDATED</th><th>CATEGORY</th><th aria-label="Actions"></th></tr></thead>
+          <thead><tr><th>REPOSITORY NAME</th><th>DESCRIPTION</th><th>GITHUB URL</th><th>PROGRAMMING LANGUAGE</th><th>TOPICS / TAGS</th><th>STARS</th><th>ARCHIVED STATUS</th><th aria-label="Actions"></th></tr></thead>
           <tbody>{filtered.map(repo=><tr key={repo.id}>
-            <td className="table-repository"><a href={repo.github_url} target="_blank" rel="noreferrer" className="repo-name">{repo.project_name}<ArrowUpRight size={13}/></a><p>{repo.description || "No description provided by GitHub."}</p>{repo.tags && repo.tags.length > 0 && <div className="table-tags">{repo.tags.slice(0,5).map(tag=><span key={tag}>{tag}</span>)}</div>}</td>
+            <td className="table-repository"><strong>{repo.project_name}</strong></td>
+            <td className="table-description">{repo.description || "—"}</td>
+            <td><a href={repo.github_url} target="_blank" rel="noreferrer" className="repo-name table-url">Open repository <ArrowUpRight size={13}/></a></td>
             <td>{repo.technology || "—"}</td>
+            <td><div className="table-tags">{repo.tags && repo.tags.length > 0 ? repo.tags.map(tag=><span key={tag}>{tag}</span>) : "—"}</div></td>
             <td className="table-stars">★ {repo.stars.toLocaleString()}</td>
-            <td>{repo.updated_at ? new Date(repo.updated_at).toLocaleDateString() : "—"}</td>
-            <td><span className="category">{repo.category}</span>{repo.status === "Archived" && <small className="archived-label">Archived</small>}</td>
+            <td><span className={repo.status === "Archived" ? "archive-pill archived" : "archive-pill"}>{repo.status === "Archived" ? "Yes" : "No"}</span></td>
             <td><button className="icon-btn danger" onClick={()=>void removeRepo(repo.id)} title="Remove from library"><Trash2 size={15}/></button></td>
           </tr>)}</tbody>
         </table>
