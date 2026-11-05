@@ -1,33 +1,37 @@
-## Repository Shelf
+# RepoShelf V2
 
-A standalone Next.js app for collecting public GitHub repositories from links and exporting the current collection as a PDF or OneNote-friendly HTML file.
+Private GitHub project library built with Next.js, React, and Supabase.
 
-## Run locally
+## Setup
 
-Requirements: Node.js 20.9 or later and npm.
+1. Create a Supabase project.
+2. In Supabase SQL Editor, run the complete script in `supabase/schema.sql`.
+3. In Supabase Authentication > Users, create your private user with your email and a strong password. Disable public sign-ups in Authentication settings.
+4. Copy the project URL and publishable (or legacy anon) key from Project Settings > API.
+5. Set these environment variables before building:
 
-```powershell
-npm install
-npm run dev
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY
 ```
 
-Open http://localhost:3000. Run `npm run lint` and `npm run build` to check the app.
+6. Install dependencies and build:
 
-## Use
+```bash
+npm install
+npm run build
+```
 
-Paste one or more GitHub repository links into the collector. It also finds repository URLs inside pasted text. Repository metadata is fetched from GitHub's public REST API. Private repositories are not accessible; unauthenticated requests are subject to GitHub's API rate limits.
+The static export is generated in `out/`. Upload the contents of `out/` to Hostinger's `public_html`.
 
-The collection is saved in browser local storage. It is private to that browser profile and is not synchronized to another device.
+## Security
 
-## Exports
+- Never put a Supabase service-role/secret key in browser code.
+- RLS is enabled; authenticated users can access only rows whose `owner` equals their own Auth user ID.
+- Disable public sign-ups. Create the sole user from the Supabase dashboard.
+- Configure Supabase Auth > URL Configuration with your production site URL and local development URL.
+- The Supabase publishable/anon key is designed for browser use when RLS is correctly configured.
 
-- **PDF** is generated from the current collection in the browser when you click the download button, so it always reflects the latest list. Repository names in the PDF link to GitHub.
-- **OneNote** downloads a table as an HTML file that can be opened or inserted into OneNote. It is regenerated from the current collection when requested.
-- Direct synchronization with a Microsoft OneNote account is not included. That requires Microsoft Graph integration, account sign-in, and appropriate application permissions.
+## Data migration
 
-## Project files
-
-- `app/page.tsx`: repository import, list, persistence, and exports.
-- `app/globals.css`: responsive visual design.
-- `app/layout.tsx`: document metadata and shared layout.
-
+The old collection is in browser localStorage under `github-repository-library:v1`. Export or copy the data from the browser where it currently exists before switching. The old data model contains GitHub metadata; map it into the new fields before importing.
