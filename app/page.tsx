@@ -171,15 +171,38 @@ export default function Home() {
 
   return <main className="app-shell">
     <header className="topbar"><a className="brand" href="#"><span className="brand-icon"><Code2 size={21}/></span><span>REPO<span>SHELF</span></span></a><div className="user-area"><span>{session.user.email}</span><button className="icon-btn" onClick={signOut} title="Sign out"><LogOut size={17}/></button></div></header>
-    <section className="heading"><div><p className="eyebrow">YOUR PRIVATE WORKSPACE</p><h1>My repositories</h1><p className="subheading">A focused home for projects worth keeping.</p></div><button className="primary add-main" onClick={()=>{setForm(emptyForm);setModal(true)}}><Plus size={20}/> Add Repo to library</button></section>
-    <section className="list-panel">
-      <div className="list-toolbar"><div><strong>Project list</strong><span className="count">{repos.length}</span></div><label className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search projects"/></label></div>
+    <section className="library-heading">
+      <div>
+        <p className="eyebrow">02 / LIBRARY</p>
+        <h1>Your repositories <span className="count">{repos.length}</span></h1>
+      </div>
+      <div className="library-toolbar">
+        <label className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Filter library"/></label>
+        <button className="primary add-main" onClick={()=>{setForm(emptyForm);setModal(true)}}><Plus size={17}/> Add Repo to library</button>
+      </div>
+    </section>
+    <section className="library-stats">
+      <div><span>PROJECTS</span><strong>{repos.length}</strong><small>in your library</small></div>
+      <div><span>COLLECTIVE STARS</span><strong>{repos.reduce((sum, repo) => sum + (repo.stars || 0), 0).toLocaleString()}</strong><small>from GitHub</small></div>
+      <div><span>CATEGORIES</span><strong>{new Set(repos.map(repo => repo.category)).size}</strong><small>represented</small></div>
+      <div><span>GITHUB SOURCE</span><strong className="source-status">● Connected metadata</strong><small>fetched automatically from public repositories</small></div>
+    </section>
+    <section className="library-table-wrap">
       {error && <p className="error inline-error">{error}</p>}
-      {loading ? <div className="empty">Loading your repositories…</div> : filtered.length === 0 ? <div className="empty"><Code2 size={30}/><strong>{repos.length ? "No matching projects" : "Your shelf is empty"}</strong><span>{repos.length ? "Try another search term." : "Add your first repository to get started."}</span></div> :
-      <div className="repo-list">{filtered.map(repo=><article className="repo-row" key={repo.id}>
-        <div className="repo-info"><a href={repo.github_url} target="_blank" rel="noreferrer" className="repo-name">{repo.project_name}<ArrowUpRight size={14}/></a><p>{repo.description || "No description provided."}</p><div className="meta"><span className="category">{repo.category}</span>{repo.technology && <span>{repo.technology}</span>}{repo.status !== "Active" && <span>{repo.status}</span>}</div></div>
-        <div className="repo-actions"><span className="stars">★ {repo.stars}</span><button className="icon-btn danger" onClick={()=>void removeRepo(repo.id)} title="Delete repository"><Trash2 size={16}/></button></div>
-      </article>)}</div>}
+      {loading ? <div className="empty">Loading your repositories…</div> : filtered.length === 0 ? <div className="empty"><Code2 size={30}/><strong>{repos.length ? "No matching repositories" : "Your library is empty"}</strong><span>{repos.length ? "Try another search term." : "Add a GitHub URL to automatically import its details."}</span></div> :
+      <div className="library-table-scroll">
+        <table className="library-table">
+          <thead><tr><th>REPOSITORY</th><th>LANGUAGE</th><th>STARS</th><th>UPDATED</th><th>CATEGORY</th><th aria-label="Actions"></th></tr></thead>
+          <tbody>{filtered.map(repo=><tr key={repo.id}>
+            <td className="table-repository"><a href={repo.github_url} target="_blank" rel="noreferrer" className="repo-name">{repo.project_name}<ArrowUpRight size={13}/></a><p>{repo.description || "No description provided by GitHub."}</p>{repo.tags && repo.tags.length > 0 && <div className="table-tags">{repo.tags.slice(0,5).map(tag=><span key={tag}>{tag}</span>)}</div>}</td>
+            <td>{repo.technology || "—"}</td>
+            <td className="table-stars">★ {repo.stars.toLocaleString()}</td>
+            <td>{repo.updated_at ? new Date(repo.updated_at).toLocaleDateString() : "—"}</td>
+            <td><span className="category">{repo.category}</span>{repo.status === "Archived" && <small className="archived-label">Archived</small>}</td>
+            <td><button className="icon-btn danger" onClick={()=>void removeRepo(repo.id)} title="Remove from library"><Trash2 size={15}/></button></td>
+          </tr>)}</tbody>
+        </table>
+      </div>}
     </section>
     <footer>REPOSHELF <span>·</span> PRIVATE BY DEFAULT</footer>
     {modal && <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setModal(false)}}><section className="modal">
