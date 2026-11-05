@@ -28,7 +28,7 @@ function db() {
   return supabase;
 }
 
-const emptyForm = { project_name: "", description: "", category: "Other", github_url: "", technology: "", tags: "", status: "Active" as const, stars: "0" };
+type RepoStatus = "Active" | "Archived" | "Planned";\n\ntype RepoForm = { project_name: string; description: string; category: string; github_url: string; technology: string; tags: string; status: RepoStatus; stars: string };\nconst emptyForm: RepoForm = { project_name: "", description: "", category: "Other", github_url: "", technology: "", tags: "", status: "Active", stars: "0" };
 const categories = ["AI & Machine Learning", "Automation", "Engineering", "Knowledge Management", "Web Development", "Productivity", "Data & Analytics", "Other"];
 
 export default function Home() {
@@ -131,7 +131,7 @@ export default function Home() {
       <form onSubmit={saveRepo} className="repo-form">
         <label>Project name<input required maxLength={255} value={form.project_name} onChange={e=>setForm({...form,project_name:e.target.value})} placeholder="e.g. Process Flow Simulator"/></label>
         <label>Description<textarea required rows={3} value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder="What does this project do?"/></label>
-        <div className="form-grid"><label>Category<select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>{categories.map(c=><option key={c}>{c}</option>)}</select></label><label>Status<select value={form.status} onChange={e=>setForm({...form,status:e.target.value as typeof form.status})}><option>Active</option><option>Planned</option><option>Archived</option></select></label></div>
+        <div className="form-grid"><label>Category<select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>{categories.map(c=><option key={c}>{c}</option>)}</select></label><label>Status<select value={form.status} onChange={e=>setForm({...form,status:e.target.value as RepoStatus})}><option>Active</option><option>Planned</option><option>Archived</option></select></label></div>
         <label>GitHub URL<input required type="url" pattern="https://github\\.com/.*" value={form.github_url} onChange={e=>setForm({...form,github_url:e.target.value})} placeholder="https://github.com/owner/repository"/></label>
         <div className="form-grid"><label>Technology<input value={form.technology} onChange={e=>setForm({...form,technology:e.target.value})} placeholder="React, Python…"/></label><label>Stars<input type="number" min="0" value={form.stars} onChange={e=>setForm({...form,stars:e.target.value})}/></label></div>
         <label>Tags <span className="muted">(comma separated)</span><input value={form.tags} onChange={e=>setForm({...form,tags:e.target.value})} placeholder="AI, automation, tools"/></label>
