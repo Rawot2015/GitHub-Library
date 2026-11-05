@@ -20,15 +20,18 @@ type Repo = {
 };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 let supabase: SupabaseClient | null = null;
 function db() {
-  if (!supabaseUrl || !supabaseAnonKey) throw new Error("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your deployment environment.");
-  if (!supabase) supabase = createClient(supabaseUrl, supabaseAnonKey);
+  if (!supabaseUrl || !supabasePublishableKey) throw new Error("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in your deployment environment.");
+  if (!supabase) supabase = createClient(supabaseUrl, supabasePublishableKey);
   return supabase;
 }
 
-type RepoStatus = "Active" | "Archived" | "Planned";\n\ntype RepoForm = { project_name: string; description: string; category: string; github_url: string; technology: string; tags: string; status: RepoStatus; stars: string };\nconst emptyForm: RepoForm = { project_name: "", description: "", category: "Other", github_url: "", technology: "", tags: "", status: "Active", stars: "0" };
+type RepoStatus = "Active" | "Archived" | "Planned";
+
+type RepoForm = { project_name: string; description: string; category: string; github_url: string; technology: string; tags: string; status: RepoStatus; stars: string };
+const emptyForm: RepoForm = { project_name: "", description: "", category: "Other", github_url: "", technology: "", tags: "", status: "Active", stars: "0" };
 const categories = ["AI & Machine Learning", "Automation", "Engineering", "Knowledge Management", "Web Development", "Productivity", "Data & Analytics", "Other"];
 
 export default function Home() {
