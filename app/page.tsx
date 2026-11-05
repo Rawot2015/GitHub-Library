@@ -28,8 +28,6 @@ function db() {
   return supabase;
 }
 
-type RepoStatus = "Active" | "Archived" | "Planned";
-
 type RepoForm = { github_url: string };
 const emptyForm: RepoForm = { github_url: "" };
 type GitHubRepository = { name: string; full_name: string; html_url: string; description: string | null; language: string | null; stargazers_count: number; topics?: string[]; archived: boolean };
