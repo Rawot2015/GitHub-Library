@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { ArrowUpRight, Code2, LogOut, Plus, Search, Trash2, X } from "lucide-react";
+import { ArrowUpRight, Code2, LogOut, Plus, Search, Trash2 } from "lucide-react";
 
 type Repo = {
   id: string;
@@ -41,7 +41,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
-  const [modal, setModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
 
