@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { ArrowUpRight, Github, LogOut, Plus, Search, Trash2, X } from "lucide-react";
+import { ArrowUpRight, Code2, LogOut, Plus, Search, Trash2, X } from "lucide-react";
 
 type Repo = {
   id: string;
@@ -104,7 +104,7 @@ export default function Home() {
 
   if (!authReady) return <main className="screen-center">Loading RepoShelf…</main>;
   if (!session) return <main className="login-wrap"><section className="login-card">
-    <div className="brand"><span className="brand-icon"><Github size={22}/></span><span>REPO<span>SHELF</span></span></div>
+    <div className="brand"><span className="brand-icon"><Code2 size={22}/></span><span>REPO<span>SHELF</span></span></div>
     <p className="eyebrow">PRIVATE REPOSITORY LIBRARY</p><h1>Your projects,<br/><em>in one place.</em></h1>
     <p className="login-copy">Sign in to access your private RepoShelf collection.</p>
     <form onSubmit={signIn} className="login-form">
@@ -117,12 +117,12 @@ export default function Home() {
   </section></main>;
 
   return <main className="app-shell">
-    <header className="topbar"><a className="brand" href="#"><span className="brand-icon"><Github size={21}/></span><span>REPO<span>SHELF</span></span></a><div className="user-area"><span>{session.user.email}</span><button className="icon-btn" onClick={signOut} title="Sign out"><LogOut size={17}/></button></div></header>
+    <header className="topbar"><a className="brand" href="#"><span className="brand-icon"><Code2 size={21}/></span><span>REPO<span>SHELF</span></span></a><div className="user-area"><span>{session.user.email}</span><button className="icon-btn" onClick={signOut} title="Sign out"><LogOut size={17}/></button></div></header>
     <section className="heading"><div><p className="eyebrow">YOUR PRIVATE WORKSPACE</p><h1>My repositories</h1><p className="subheading">A focused home for projects worth keeping.</p></div><button className="primary add-main" onClick={()=>{setForm(emptyForm);setModal(true)}}><Plus size={20}/> Add Repo</button></section>
     <section className="list-panel">
       <div className="list-toolbar"><div><strong>Project list</strong><span className="count">{repos.length}</span></div><label className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search projects"/></label></div>
       {error && <p className="error inline-error">{error}</p>}
-      {loading ? <div className="empty">Loading your repositories…</div> : filtered.length === 0 ? <div className="empty"><Github size={30}/><strong>{repos.length ? "No matching projects" : "Your shelf is empty"}</strong><span>{repos.length ? "Try another search term." : "Add your first repository to get started."}</span></div> :
+      {loading ? <div className="empty">Loading your repositories…</div> : filtered.length === 0 ? <div className="empty"><Code2 size={30}/><strong>{repos.length ? "No matching projects" : "Your shelf is empty"}</strong><span>{repos.length ? "Try another search term." : "Add your first repository to get started."}</span></div> :
       <div className="repo-list">{filtered.map(repo=><article className="repo-row" key={repo.id}>
         <div className="repo-info"><a href={repo.github_url} target="_blank" rel="noreferrer" className="repo-name">{repo.project_name}<ArrowUpRight size={14}/></a><p>{repo.description || "No description provided."}</p><div className="meta"><span className="category">{repo.category}</span>{repo.technology && <span>{repo.technology}</span>}{repo.status !== "Active" && <span>{repo.status}</span>}</div></div>
         <div className="repo-actions"><span className="stars">★ {repo.stars}</span><button className="icon-btn danger" onClick={()=>void removeRepo(repo.id)} title="Delete repository"><Trash2 size={16}/></button></div>
