@@ -135,7 +135,6 @@ export default function Home() {
       const { error: insertError } = await db().from("repositories").insert(payload);
       if (insertError) throw insertError;
 
-      setModal(false);
       setForm(emptyForm);
       await loadRepos();
     } catch (e) {
@@ -171,6 +170,19 @@ export default function Home() {
 
   return <main className="app-shell">
     <header className="topbar"><a className="brand" href="#"><span className="brand-icon"><Code2 size={21}/></span><span>REPO<span>SHELF</span></span></a><div className="user-area"><span>{session.user.email}</span><button className="icon-btn" onClick={signOut} title="Sign out"><LogOut size={17}/></button></div></header>
+    <section className="collect-section">
+      <div className="collect-title">
+        <div><p className="eyebrow">01 / COLLECT</p><h2>Add repository</h2></div>
+        <span className="collect-plus"><Plus size={17}/></span>
+      </div>
+      <form onSubmit={saveRepo} className="collect-form">
+        <label>GITHUB REPOSITORY URL <span>*</span>
+          <input required type="url" value={form.github_url} onChange={e=>setForm({github_url:e.target.value})} placeholder="https://github.com/owner/repository"/>
+        </label>
+        {error && <p className="error collect-error">{error}</p>}
+        <div className="collect-actions"><button className="primary" disabled={saving}><Plus size={16}/>{saving ? "Fetching repository…" : "Add to library"}</button></div>
+      </form>
+    </section>
     <section className="library-heading">
       <div>
         <p className="eyebrow">02 / LIBRARY</p>
@@ -178,7 +190,6 @@ export default function Home() {
       </div>
       <div className="library-toolbar">
         <label className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Filter library"/></label>
-        <button className="primary add-main" onClick={()=>{setForm(emptyForm);setModal(true)}}><Plus size={17}/> Add Repo to library</button>
       </div>
     </section>
     <section className="library-stats">
@@ -207,13 +218,6 @@ export default function Home() {
       </div>}
     </section>
     <footer>REPOSHELF <span>·</span> PRIVATE BY DEFAULT</footer>
-    {modal && <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setModal(false)}}><section className="modal">
-      <div className="modal-head"><div><p className="eyebrow">NEW ENTRY</p><h2>Add Repo to library</h2></div><button className="icon-btn" onClick={()=>setModal(false)}><X size={19}/></button></div>
-      <form onSubmit={saveRepo} className="repo-form">
-        <p className="login-copy">Paste a public GitHub repository link. RepoShelf will retrieve its name, description, language, topics, star count and archived status automatically.</p>
-        <label>GitHub repository URL<input required type="url" value={form.github_url} onChange={e=>setForm({github_url:e.target.value})} placeholder="https://github.com/owner/repository"/></label>
-        <div className="modal-actions"><button type="button" className="secondary" onClick={()=>setModal(false)}>Cancel</button><button className="primary" disabled={saving}>{saving ? "Fetching and adding…" : "Add to library"}</button></div>
-      </form>
-    </section></div>}
+
   </main>;
 }
