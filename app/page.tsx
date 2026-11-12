@@ -282,7 +282,7 @@ export default function Home() {
 
   if (!authReady) return <main className="screen-center">Loading RepoShelf…</main>;
   if (!session) return <main className="login-wrap"><section className="login-card">
-    <div className="brand"><span className="brand-icon"><Code2 size={22}/></span><span>REPO<span>SHELF</span></span></div>
+    <div className="brand"><span className="brand-icon"><img src="/reposhelf-mark.svg" alt="" /></span><span>REPO<span>SHELF</span></span></div>
     <p className="eyebrow">PRIVATE REPOSITORY LIBRARY</p><h1>Your projects,<br/><em>in one place.</em></h1>
     <p className="login-copy">Sign in to access your private RepoShelf collection.</p>
     <form onSubmit={signIn} className="login-form">
@@ -295,7 +295,7 @@ export default function Home() {
   </section></main>;
 
   return <main className="app-shell">
-    <header className="topbar"><a className="brand" href="#"><span className="brand-icon"><Code2 size={21}/></span><span>REPO<span>SHELF</span></span></a><div className="user-area"><span>{session.user.email}</span><button className="icon-btn" onClick={signOut} title="Sign out"><LogOut size={17}/></button></div></header>
+    <header className="topbar"><a className="brand" href="#"><span className="brand-icon"><img src="/reposhelf-mark.svg" alt="" /></span><span>REPO<span>SHELF</span></span></a><div className="user-area"><span>{session.user.email}</span><button className="icon-btn" onClick={signOut} title="Sign out"><LogOut size={17}/></button></div></header>
     <section className="collect-section">
       <div className="collect-title">
         <div><p className="eyebrow">01 / COLLECT</p><h2>Add repository</h2></div>
