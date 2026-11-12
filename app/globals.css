@@ -53,3 +53,18 @@ button,.primary,.icon-btn,.table-url{transition:background .18s,border-color .18
 
 /* Three dashboard summary cards after removing Data Source */
 @media(min-width:901px){.library-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Clickable GitHub topic filters */
+.tag-filter-section{margin:0 0 18px;padding:15px 18px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 5px 18px #1c3b2807}
+.tag-filter-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
+.tag-filter-heading>span{font-size:8px;font-weight:700;letter-spacing:1.25px;color:var(--muted)}
+.clear-tag-filter{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--green);font-size:10px;font-weight:700}
+.tag-filter-list{display:flex;flex-wrap:wrap;gap:7px}
+.tag-filter-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid #e2eae2;border-radius:7px;background:#f8fbf8;color:#53665a;font-size:10px;transition:all .16s}
+.tag-filter-chip:hover{border-color:#9bbba5;background:#edf5ef;color:var(--green)}
+.tag-filter-chip.selected{border-color:var(--green);background:var(--green);color:#fff}
+.tag-filter-chip>span{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;border-radius:10px;background:#e8eee8;color:#5c7062;font-size:9px}
+.tag-filter-chip.selected>span{background:#ffffff30;color:#fff}
+.no-tags{font-size:11px;color:var(--muted)}
+@media(max-width:600px){.tag-filter-section{padding:13px}.tag-filter-chip{font-size:9px;padding:7px 8px}}
+
