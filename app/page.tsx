@@ -42,6 +42,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -200,8 +201,14 @@ export default function Home() {
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    return repos.filter(r => !q || [r.project_name, r.description, r.category, r.technology, ...(r.tags ?? [])].join(" ").toLowerCase().includes(q));
-  }, [repos, query]);
+    return repos.filter(r => {
+      const matchesQuery = !q || [r.project_name, r.description, r.category, r.technology, ...(r.tags ?? [])].join(" ").toLowerCase().includes(q);
+      const matchesTag = !activeTag || (r.tags ?? []).some(tag => tag.toLowerCase() === activeTag.toLowerCase());
+      return matchesQuery && matchesTag;
+    });
+  }, [repos, query, activeTag]);
+
+  const availableTags = useMemo(() => Array.from(new Set(repos.flatMap(repo => repo.tags ?? []).filter(Boolean))).sort((a, b) => a.localeCompare(b)), [repos]);
 
   if (!authReady) return <main className="screen-center">Loading RepoShelf…</main>;
   if (!session) return <main className="login-wrap"><section className="login-card">
@@ -238,17 +245,18 @@ export default function Home() {
         <h1>Your repositories <span className="count">{repos.length}</span></h1>
       </div>
       <div className="library-toolbar">
-        <label className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Filter library"/></label>
+        <label className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search repositories"/></label>
       </div>
     </section>
-    <section className="library-stats">
-      <div className="stat-card"><span className="stat-icon"><Code2 size={17}/></span><div><span>PROJECTS</span><strong>{repos.length}</strong><small>repositories collected</small></div></div>
-      <div className="stat-card"><span className="stat-icon star-icon">★</span><div><span>COLLECTIVE STARS</span><strong>{repos.reduce((sum, repo) => sum + (repo.stars || 0), 0).toLocaleString()}</strong><small>across your collection</small></div></div>
-      <div className="stat-card"><span className="stat-icon"><Search size={17}/></span><div><span>CATEGORIES</span><strong>{new Set(repos.map(repo => repo.category)).size}</strong><small>areas represented</small></div></div>
+    <section className="tag-filter-section" aria-label="Filter repositories by topic">
+      <div className="tag-filter-heading"><span>FILTER BY TAG</span>{activeTag && <button className="clear-tag-filter" onClick={() => setActiveTag(null)}>Clear “{activeTag}” <X size={12}/></button>}</div>
+      <div className="tag-filter-list">
+        {availableTags.length ? availableTags.map(tag => <button key={tag} type="button" className={`tag-filter-chip ${activeTag === tag ? "selected" : ""}`} aria-pressed={activeTag === tag} onClick={() => setActiveTag(current => current === tag ? null : tag)}>{tag}<span>{repos.filter(repo => (repo.tags ?? []).some(item => item.toLowerCase() === tag.toLowerCase())).length}</span></button>) : <span className="no-tags">No GitHub topics available yet. Add or edit repository tags to build filters.</span>}
+      </div>
     </section>
     <section className="library-table-wrap">
       {error && <p className="error inline-error">{error}</p>}
-      {loading ? <div className="empty">Loading your repositories…</div> : filtered.length === 0 ? <div className="empty"><Code2 size={30}/><strong>{repos.length ? "No matching repositories" : "Your library is empty"}</strong><span>{repos.length ? "Try another search term." : "Add a GitHub URL to automatically import its details."}</span></div> :
+      {loading ? <div className="empty">Loading your repositories…</div> : filtered.length === 0 ? <div className="empty"><Code2 size={30}/><strong>{repos.length ? "No matching repositories" : "Your library is empty"}</strong><span>{repos.length ? (activeTag ? `No repositories are tagged “${activeTag}”.` : "Try another search term.") : "Add a GitHub URL to automatically import its details."}</span></div> :
       <div className="library-table-scroll">
         <table className="library-table">
           <thead><tr><th>REPOSITORY NAME</th><th>DESCRIPTION</th><th>GITHUB URL</th><th>PROGRAMMING LANGUAGE</th><th>TOPICS / TAGS</th><th>STARS</th><th aria-label="Actions"></th></tr></thead>
