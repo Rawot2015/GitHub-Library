@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Repository Shelf | GitHub Library",
   description: "Collect GitHub repositories and keep shareable PDF and OneNote-ready exports in sync.",
+  icons: { icon: "/favicon.svg", shortcut: "/favicon.svg", apple: "/favicon.svg" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
