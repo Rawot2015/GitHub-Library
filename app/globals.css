@@ -121,3 +121,8 @@ button,.primary,.icon-btn,.table-url{transition:background .18s,border-color .18
 .readme-section pre{max-height:420px;overflow:auto;padding:15px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#52645a;font:11px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:650px){.collections-topline{align-items:stretch;flex-direction:column}.collections-topline form{width:100%}.collections-topline input{min-width:0;flex:1}.advanced-filters{align-items:stretch}.advanced-filters label{width:100%;justify-content:space-between}.advanced-filters select{flex:1}.reset-filters{margin-left:0}.detail-panel{padding:20px}.detail-meta{grid-template-columns:1fr}.detail-header h2{font-size:21px}}
 
+
+/* RepoShelf bookshelf brand mark */
+.brand-icon{background:transparent!important;box-shadow:none!important;overflow:hidden;}
+.brand-icon img{display:block;width:100%;height:100%;object-fit:contain;border-radius:9px;}
+.login-card .brand-icon{width:42px;height:42px;}
