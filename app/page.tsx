@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { ArrowUpRight, Code2, LogOut, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowUpRight, Check, Code2, LogOut, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 
 type Repo = {
   id: string;
@@ -29,6 +29,7 @@ function db() {
 }
 
 type RepoForm = { github_url: string };
+type RepoEditForm = { project_name: string; description: string; github_url: string; technology: string; tags: string; stars: string; status: "Active" | "Archived" | "Planned" };
 const emptyForm: RepoForm = { github_url: "" };
 type GitHubRepository = { name: string; full_name: string; html_url: string; description: string | null; language: string | null; stargazers_count: number; topics?: string[]; archived: boolean };
 
@@ -43,6 +44,9 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<RepoEditForm | null>(null);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | undefined;
@@ -142,6 +146,54 @@ export default function Home() {
       setSaving(false);
     }
   }
+  function startEditing(repo: Repo) {
+    setError("");
+    setEditingId(repo.id);
+    setEditForm({
+      project_name: repo.project_name,
+      description: repo.description ?? "",
+      github_url: repo.github_url,
+      technology: repo.technology ?? "",
+      tags: (repo.tags ?? []).join(", "),
+      stars: String(repo.stars ?? 0),
+      status: repo.status
+    });
+  }
+  function cancelEditing() {
+    setEditingId(null);
+    setEditForm(null);
+  }
+  async function updateRepo(event: FormEvent, id: string) {
+    event.preventDefault();
+    if (!editForm) return;
+    setUpdating(true);
+    setError("");
+    const stars = Number(editForm.stars);
+    if (!Number.isInteger(stars) || stars < 0) {
+      setError("Stars must be a whole number greater than or equal to zero.");
+      setUpdating(false);
+      return;
+    }
+    try {
+      const { data, error: updateError } = await db().from("repositories").update({
+        project_name: editForm.project_name.trim(),
+        description: editForm.description.trim(),
+        github_url: editForm.github_url.trim(),
+        technology: editForm.technology.trim() || null,
+        tags: editForm.tags.split(",").map(tag => tag.trim()).filter(Boolean),
+        stars,
+        status: editForm.status
+      }).eq("id", id).select().single();
+      if (updateError) throw updateError;
+      setRepos(current => current.map(repo => repo.id === id ? data as Repo : repo));
+      cancelEditing();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not update this repository.");
+    } finally {
+      setUpdating(false);
+    }
+  }
+
   async function removeRepo(id: string) {
     if (!confirm("Delete this repository record?")) return;
     const { error: e } = await db().from("repositories").delete().eq("id", id);
@@ -203,15 +255,26 @@ export default function Home() {
       <div className="library-table-scroll">
         <table className="library-table">
           <thead><tr><th>REPOSITORY NAME</th><th>DESCRIPTION</th><th>GITHUB URL</th><th>PROGRAMMING LANGUAGE</th><th>TOPICS / TAGS</th><th>STARS</th><th>ARCHIVED STATUS</th><th aria-label="Actions"></th></tr></thead>
-          <tbody>{filtered.map(repo=><tr key={repo.id}>
-            <td className="table-repository"><strong>{repo.project_name}</strong></td>
-            <td className="table-description">{repo.description || "—"}</td>
-            <td><a href={repo.github_url} target="_blank" rel="noreferrer" className="repo-name table-url">Open repository <ArrowUpRight size={13}/></a></td>
-            <td>{repo.technology || "—"}</td>
-            <td><div className="table-tags">{repo.tags && repo.tags.length > 0 ? repo.tags.map(tag=><span key={tag}>{tag}</span>) : "—"}</div></td>
-            <td className="table-stars">★ {repo.stars.toLocaleString()}</td>
-            <td><span className={repo.status === "Archived" ? "archive-pill archived" : "archive-pill"}>{repo.status === "Archived" ? "Yes" : "No"}</span></td>
-            <td><button className="icon-btn danger" onClick={()=>void removeRepo(repo.id)} title="Remove from library"><Trash2 size={15}/></button></td>
+          <tbody>{filtered.map(repo=><tr key={repo.id} className={editingId === repo.id ? "editing-row" : ""}>
+            {editingId === repo.id && editForm ? <>
+              <td><input className="cell-edit" aria-label="Repository name" value={editForm.project_name} onChange={e=>setEditForm({...editForm,project_name:e.target.value})}/></td>
+              <td><textarea className="cell-edit cell-edit-description" aria-label="Description" value={editForm.description} onChange={e=>setEditForm({...editForm,description:e.target.value})}/></td>
+              <td><input className="cell-edit" aria-label="GitHub URL" type="url" value={editForm.github_url} onChange={e=>setEditForm({...editForm,github_url:e.target.value})}/></td>
+              <td><input className="cell-edit" aria-label="Programming language" value={editForm.technology} onChange={e=>setEditForm({...editForm,technology:e.target.value})}/></td>
+              <td><input className="cell-edit" aria-label="Topics, comma separated" value={editForm.tags} onChange={e=>setEditForm({...editForm,tags:e.target.value})}/></td>
+              <td><input className="cell-edit cell-edit-number" aria-label="Stars" type="number" min="0" step="1" value={editForm.stars} onChange={e=>setEditForm({...editForm,stars:e.target.value})}/></td>
+              <td><select className="cell-edit" aria-label="Archived status" value={editForm.status} onChange={e=>setEditForm({...editForm,status:e.target.value as RepoEditForm["status"]})}><option value="Active">Active</option><option value="Archived">Archived</option><option value="Planned">Planned</option></select></td>
+              <td className="row-actions"><button className="icon-btn save-edit" onClick={e=>void updateRepo(e,repo.id)} disabled={updating} title="Save changes"><Check size={16}/></button><button className="icon-btn" onClick={cancelEditing} disabled={updating} title="Cancel editing"><X size={16}/></button></td>
+            </> : <>
+              <td className="table-repository"><strong>{repo.project_name}</strong></td>
+              <td className="table-description">{repo.description || "—"}</td>
+              <td><a href={repo.github_url} target="_blank" rel="noreferrer" className="repo-name table-url">Open repository <ArrowUpRight size={13}/></a></td>
+              <td>{repo.technology || "—"}</td>
+              <td><div className="table-tags">{repo.tags && repo.tags.length > 0 ? repo.tags.map(tag=><span key={tag}>{tag}</span>) : "—"}</div></td>
+              <td className="table-stars">★ {repo.stars.toLocaleString()}</td>
+              <td><span className={repo.status === "Archived" ? "archive-pill archived" : "archive-pill"}>{repo.status === "Archived" ? "Yes" : "No"}</span></td>
+              <td className="row-actions"><button className="icon-btn" onClick={()=>startEditing(repo)} title="Edit repository"><Pencil size={15}/></button><button className="icon-btn danger" onClick={()=>void removeRepo(repo.id)} title="Remove from library"><Trash2 size={15}/></button></td>
+            </>}
           </tr>)}</tbody>
         </table>
       </div>}
