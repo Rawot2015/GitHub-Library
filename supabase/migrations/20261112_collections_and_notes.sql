@@ -40,3 +40,22 @@ create policy "Owners can delete their collections" on public.collections
 
 grant select, insert, update, delete on public.collections to authenticated;
 revoke all on public.collections from anon;
+
+-- Prevent assigning another user's collection to a repository, even through direct API calls.
+create or replace function public.validate_repository_collection_owner()
+returns trigger language plpgsql security invoker as $$
+begin
+  if new.collection_id is not null and not exists (
+    select 1 from public.collections c
+    where c.id = new.collection_id and c.owner = new.owner
+  ) then
+    raise exception 'Collection must belong to the same user as the repository';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists repositories_validate_collection_owner on public.repositories;
+create trigger repositories_validate_collection_owner
+  before insert or update of collection_id, owner on public.repositories
+  for each row execute function public.validate_repository_collection_owner();
