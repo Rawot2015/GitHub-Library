@@ -49,3 +49,7 @@ button,.primary,.icon-btn,.table-url{transition:background .18s,border-color .18
 .row-actions .save-edit{background:#e6f2e9;color:var(--green)}
 .row-actions .save-edit:hover{background:#d5eadb}
 .row-actions .icon-btn:disabled{opacity:.45;cursor:wait}
+
+
+/* Three dashboard summary cards after removing Data Source */
+@media(min-width:901px){.library-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
